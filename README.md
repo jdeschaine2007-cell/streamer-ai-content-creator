@@ -14,14 +14,34 @@ AI-powered content creation tools for game streamers using GitHub Models API. Ge
 ## Prerequisites
 
 1. GitHub account
-2. GitHub Personal Access Token (PAT) with `models` scope
+2. For local usage only: GitHub Personal Access Token (PAT) with `models: read` permission
    - Go to https://github.com/settings/tokens
    - Create a new token
-   - Select the `models` scope
+   - Select the `models` scope (note: some accounts may not have access to this scope)
 
 ## Setup
 
-### Option 1: Local Usage
+### Option 1: GitHub Actions (Recommended - No Token Required)
+
+GitHub Actions automatically provides authentication, making it the easiest method to use.
+
+1. Go to your repository: https://github.com/jdeschaine2007-cell/streamer-ai-content-creator
+2. Click the **Actions** tab
+3. Select either workflow:
+   - **AI Content Generator**: Full content generation
+   - **AI Thumbnail Prompt Generator**: Thumbnail prompts only
+4. Click **Run workflow**
+5. Fill in the required fields:
+   - Game name
+   - Content type
+   - Highlights
+   - Choose AI model (optional, defaults to GPT-4o)
+6. Click **Run workflow**
+7. The generated content will be saved in the `output/` directory
+
+### Option 2: Local Usage (Requires Token with Specific Permissions)
+
+**Note**: Local usage requires a GitHub Personal Access Token with `models: read` permission. If you encounter 403 errors, use GitHub Actions instead.
 
 1. Clone this repository:
 ```bash
@@ -48,24 +68,6 @@ GITHUB_TOKEN=your_github_personal_access_token_here
 ```bash
 python ai_content_generator.py
 ```
-
-### Option 2: GitHub Actions (Recommended)
-
-1. Fork this repository to your GitHub account
-
-2. Go to the **Actions** tab in your repository
-
-3. Select either workflow:
-   - **AI Content Generator**: Full content generation
-   - **AI Thumbnail Prompt Generator**: Thumbnail prompts only
-
-4. Click **Run workflow** and fill in the required fields:
-   - Game name
-   - Content type
-   - Highlights
-   - Choose AI model (optional, defaults to GPT-4o)
-
-5. The generated content will be saved in the `output/` directory
 
 ## Usage Examples
 
