@@ -1,0 +1,202 @@
+name: AI Content Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      game_name:
+        description: 'Game name'
+        required: true
+        type: string
+      content_type:
+        description: 'Content type (e.g., Clutch Moment, Funny Moment, Tutorial)'
+        required: true
+        type: string
+      highlights:
+        description: 'Key highlights from the stream'
+        required: true
+        type: string
+      model:
+        description: 'AI model to use'
+        required: false
+        type: choice
+        options:
+          - openai/gpt-4o
+          - openai/gpt-4.1
+          - meta/llama-3.1-70b-instruct
+        default: 'openai/gpt-4o'
+
+permissions:
+  models: read
+  contents: write
+
+jobs:
+  generate-content:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Generate video title
+        id: generate-title
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate a catchy, engaging YouTube video title for a gaming stream.\n\nGame: ${{ inputs.game_name }}\nContent Type: ${{ inputs.content_type }}\nHighlights: ${{ inputs.highlights }}\n\nRequirements:\n- Make it exciting and click-worthy\n- Keep it under 60 characters\n- Include relevant keywords for SEO\n- Make it specific to the content\n\nReturn only the title, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          
+          TITLE=$(echo $RESPONSE | jq -r '.choices[0].message.content')
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+          echo "Generated Title: $TITLE"
+      
+      - name: Generate video description
+        id: generate-description
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ steps.generate-title.outputs.title }}
+        run: |
+          RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate an engaging YouTube video description for a gaming stream.\n\nGame: ${{ inputs.game_name }}\nTitle: $TITLE\nHighlights: ${{ inputs.highlights }}\n\nRequirements:\n- Include a hook in the first 2 lines\n- Add relevant timestamps placeholder (0:00 - Intro, etc.)\n- Include SEO keywords naturally\n- Add a call to action (subscribe, like, etc.)\n- Mention the stream schedule\n- Keep it under 2000 characters\n\nReturn only the description, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          
+          DESCRIPTION=$(echo $RESPONSE | jq -r '.choices[0].message.content')
+          echo "description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "Generated Description: $DESCRIPTION"
+      
+      - name: Generate social media posts
+        id: generate-social
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ steps.generate-title.outputs.title }}
+        run: |
+          # Twitter Post
+          TWITTER_RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate an engaging Twitter/X post to promote a stream clip.\n\nVideo Title: $TITLE\nGame: ${{ inputs.game_name }}\nClip URL: [LINK]\n\nRequirements:\n- Under 280 characters\n- Include relevant hashtags\n- Make it exciting and shareable\n- Include a call to action\n\nReturn only the tweet text, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          TWITTER=$(echo $TWITTER_RESPONSE | jq -r '.choices[0].message.content')
+          
+          # Instagram Caption
+          INSTAGRAM_RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate an engaging Instagram caption for a gaming clip.\n\nVideo Title: $TITLE\nGame: ${{ inputs.game_name }}\n\nRequirements:\n- Under 2200 characters\n- Include relevant hashtags\n- Make it visually descriptive\n- Add emoji appropriate for gaming\n- Include a call to action\n\nReturn only the caption, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          INSTAGRAM=$(echo $INSTAGRAM_RESPONSE | jq -r '.choices[0].message.content')
+          
+          # TikTok Description
+          TIKTOK_RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate a catchy TikTok description for a gaming clip.\n\nVideo Title: $TITLE\nGame: ${{ inputs.game_name }}\n\nRequirements:\n- Under 150 characters\n- Include trending hashtags\n- Make it punchy and exciting\n- Focus on the most exciting moment\n\nReturn only the description, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          TIKTOK=$(echo $TIKTOK_RESPONSE | jq -r '.choices[0].message.content')
+          
+          echo "twitter=$TWITTER" >> $GITHUB_OUTPUT
+          echo "instagram=$INSTAGRAM" >> $GITHUB_OUTPUT
+          echo "tiktok=$TIKTOK" >> $GITHUB_OUTPUT
+          
+          echo "Twitter: $TWITTER"
+          echo "Instagram: $INSTAGRAM"
+          echo "TikTok: $TIKTOK"
+      
+      - name: Generate thumbnail prompt
+        id: generate-thumbnail
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ steps.generate-title.outputs.title }}
+        run: |
+          RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate a detailed image generation prompt for creating a YouTube thumbnail.\n\nGame: ${{ inputs.game_name }}\nTitle: $TITLE\nMood: exciting\n\nRequirements:\n- Describe the scene vividly\n- Include character expressions\n- Specify lighting and colors\n- Mention text overlay suggestions\n- Make it eye-catching and high-contrast\n- Style: professional gaming thumbnail\n\nReturn only the image prompt, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          
+          THUMBNAIL_PROMPT=$(echo $RESPONSE | jq -r '.choices[0].message.content')
+          echo "thumbnail_prompt=$THUMBNAIL_PROMPT" >> $GITHUB_OUTPUT
+          echo "Thumbnail Prompt: $THUMBNAIL_PROMPT"
+      
+      - name: Create content output file
+        run: |
+          mkdir -p output
+          cat > output/generated-content.md << EOF
+          # Generated Content for ${{ inputs.game_name }}
+          
+          ## Video Title
+          ${{ steps.generate-title.outputs.title }}
+          
+          ## Video Description
+          ${{ steps.generate-description.outputs.description }}
+          
+          ## Social Media Posts
+          
+          ### Twitter/X
+          ${{ steps.generate-social.outputs.twitter }}
+          
+          ### Instagram
+          ${{ steps.generate-social.outputs.instagram }}
+          
+          ### TikTok
+          ${{ steps.generate-social.outputs.tiktok }}
+          
+          ## Thumbnail Image Prompt
+          ${{ steps.generate-thumbnail.outputs.thumbnail_prompt }}
+          
+          ---
+          Generated with GitHub Models API
+          EOF
+      
+      - name: Commit and push generated content
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add output/
+          git commit -m "Generate AI content for ${{ inputs.game_name }} - ${{ inputs.content_type }}" || exit 0
+          git push

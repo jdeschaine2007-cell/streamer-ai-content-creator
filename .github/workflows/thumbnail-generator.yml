@@ -1,0 +1,94 @@
+name: AI Thumbnail Prompt Generator
+
+on:
+  workflow_dispatch:
+    inputs:
+      game_name:
+        description: 'Game name'
+        required: true
+        type: string
+      title:
+        description: 'Video title'
+        required: true
+        type: string
+      mood:
+        description: 'Mood for thumbnail (exciting, dramatic, funny, etc.)'
+        required: false
+        type: choice
+        options:
+          - exciting
+          - dramatic
+          - funny
+          - epic
+          - chill
+        default: 'exciting'
+      model:
+        description: 'AI model to use'
+        required: false
+        type: choice
+        options:
+          - openai/gpt-4o
+          - openai/gpt-4.1
+          - meta/llama-3.1-70b-instruct
+        default: 'openai/gpt-4o'
+
+permissions:
+  models: read
+  contents: write
+
+jobs:
+  generate-thumbnail-prompt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Generate thumbnail prompt
+        id: generate-prompt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RESPONSE=$(curl "https://models.github.ai/inference/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $GITHUB_TOKEN" \
+            -d '{
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Generate a detailed image generation prompt for creating a YouTube thumbnail.\n\nGame: ${{ inputs.game_name }}\nTitle: ${{ inputs.title }}\nMood: ${{ inputs.mood }}\n\nRequirements:\n- Describe the scene vividly\n- Include character expressions\n- Specify lighting and colors\n- Mention text overlay suggestions\n- Make it eye-catching and high-contrast\n- Style: professional gaming thumbnail\n- Include specific character poses or actions\n- Suggest color palette\n- Mention composition and framing\n\nReturn only the image prompt, nothing else."
+                }
+              ],
+              "model": "${{ inputs.model }}"
+            }')
+          
+          PROMPT=$(echo $RESPONSE | jq -r '.choices[0].message.content')
+          echo "prompt=$PROMPT" >> $GITHUB_OUTPUT
+          echo "Generated Prompt: $PROMPT"
+      
+      - name: Create thumbnail prompt file
+        run: |
+          mkdir -p thumbnail-prompts
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          cat > thumbnail-prompts/${TIMESTAMP}-${{ inputs.game_name }}.txt << EOF
+          # Thumbnail Prompt for ${{ inputs.game_name }}
+          # Video: ${{ inputs.title }}
+          # Mood: ${{ inputs.mood }}
+          # Generated: $(date)
+          
+          ${{ steps.generate-prompt.outputs.prompt }}
+          
+          ---
+          Use this prompt with AI image generators like:
+          - Midjourney
+          - DALL-E 3
+          - Stable Diffusion
+          - Leonardo.ai
+          EOF
+      
+      - name: Commit and push thumbnail prompt
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add thumbnail-prompts/
+          git commit -m "Add thumbnail prompt for ${{ inputs.game_name }}" || exit 0
+          git push
