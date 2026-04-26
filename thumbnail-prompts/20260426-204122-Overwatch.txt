@@ -1,0 +1,13 @@
+# Thumbnail Prompt for Overwatch
+# Video: Veteran down shots fired
+# Mood: dramatic
+# Generated: Sun Apr 26 20:41:22 UTC 2026
+
+"A dramatic Overwatch battlefield scene set in a dimly lit, war-torn urban environment. Front and center, Soldier: 76 is kneeling on one knee, clutching his side as he grimaces in pain, his visor cracked and glowing faintly. Behind him, in the right mid-ground, Widowmaker is perched on a rooftop, her rifle aimed directly at him, her expression cold and calculating. In the left mid-ground, Reinhardt is charging into frame from the shadows, his hammer raised, eyes blazing with fury from his helmet’s opening. The lighting is intense and moody, with fiery orange and smoky gray hues dominating the backdrop, accented by sharp streaks of neon blue and red from energy weapons. Sparks fly and embers float in the air, creating a sense of chaos and urgency. In bold, high-contrast text across the top, the title reads 'VETERAN DOWN' in large, distressed white and red lettering, and below it, 'SHOTS FIRED' flashes in italicized gold with a glowing effect. The thumbnail is framed with Soldier: 76 in the lower third, Widowmaker and Reinhardt balanced diagonally in the upper half, and the Overwatch logo subtly watermarked in the bottom right corner. Colors are saturated for impact, emphasizing the blue of Widowmaker, the orange glow of fires, and the red blood on Soldier: 76’s hand."
+
+---
+Use this prompt with AI image generators like:
+- Midjourney
+- DALL-E 3
+- Stable Diffusion
+- Leonardo.ai
